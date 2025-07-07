@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+pnpm --filter flimmer-mobile test:ci && pnpm --filter flimmer-mobile type-check

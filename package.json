@@ -12,10 +12,13 @@
     "test": "pnpm --parallel --stream -r test",
     "ci": "pnpm --parallel --stream -r ci",
     "format": "pnpm --parallel --stream -r format",
-    "lint": "pnpm --parallel --stream -r lint"
+    "lint": "pnpm --parallel --stream -r lint",
+    "prepare": "husky install"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.1",
+    "husky": "^8.0.3",
+    "lint-staged": "^14.0.1",
     "pnpm": "^8.15.4",
     "typescript": "^5.3.3"
   },
@@ -27,5 +30,21 @@
       "@types/react": "18.2.79",
       "@types/react-dom": "18.2.25"
     }
+  },
+  "lint-staged": {
+    "flimmer-mobile/**/*.{js,jsx,ts,tsx}": [
+      "cd flimmer-mobile && eslint --fix",
+      "cd flimmer-mobile && prettier --write"
+    ],
+    "flimmer-mobile/**/*.{json,md,yml,yaml}": [
+      "cd flimmer-mobile && prettier --write"
+    ],
+    "nextjs-poc/**/*.{js,jsx,ts,tsx}": [
+      "cd nextjs-poc && pnpm lint:fix",
+      "cd nextjs-poc && prettier --write"
+    ],
+    "nextjs-poc/**/*.{json,md,yml,yaml}": [
+      "cd nextjs-poc && prettier --write"
+    ]
   }
 }

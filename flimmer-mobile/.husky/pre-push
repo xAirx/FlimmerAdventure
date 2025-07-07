@@ -1,9 +1,0 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
-echo "🧪 Running pre-push tests..."
-
-# Run tests in CI mode
-npm run test:ci
-
-echo "✅ Pre-push tests passed!" 

@@ -109,7 +109,7 @@ Get the entire ecosystem running with a single command.
 
 ```bash
 # Ensure you are in the project root directory
-./demo-quick-start.sh
+./demo-quick-start.sh for easy start or try ./scripts.sh for more fine grained control of the monorepo
 ```
 
 **What this script does:**
