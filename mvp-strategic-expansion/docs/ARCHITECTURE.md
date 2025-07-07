@@ -19,7 +19,7 @@ Our system is composed of two primary layers: a **Backend-for-Frontend (BFF)** t
 
 ```
 +--------------------------+        +--------------------------+
-|   Clients                |        |   BFF Layer (Smart Proxy)|
+|   Clients                |        |  Next.JS app|
 |--------------------------|        |--------------------------|
 |                          |        |                          |
 |   [Admin Web Dashboard]  |------->|   [Next.js API Routes]   |
