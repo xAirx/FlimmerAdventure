@@ -1,0 +1,416 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  release:
+    types: [published]
+
+env:
+  NODE_VERSION: '18'
+  EXPO_CLI_VERSION: '6.0.0'
+
+jobs:
+  # Code Quality & Testing
+  test:
+    name: 🧪 Test & Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: |
+          npm ci
+          npm install -g @expo/cli@${{ env.EXPO_CLI_VERSION }}
+
+      - name: 🔍 Lint code
+        run: npm run lint
+
+      - name: 🧪 Run tests
+        run: npm run test:ci
+
+      - name: 📊 Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+
+      - name: 📱 Type check
+        run: npx tsc --noEmit
+
+  # Security & Dependency Checks
+  security:
+    name: 🔒 Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🔍 Audit dependencies
+        run: npm audit --audit-level high
+
+      - name: 🛡️ Run security scan
+        uses: securecodewarrior/github-action-add-sarif@v1
+        if: always()
+        with:
+          sarif-file: 'security-scan-results.sarif'
+
+  # Build iOS Development
+  build-ios-dev:
+    name: 🍎 Build iOS (Development)
+    runs-on: macos-latest
+    needs: [test, security]
+    if: github.ref == 'refs/heads/develop'
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: |
+          npm ci
+          npm install -g @expo/cli@${{ env.EXPO_CLI_VERSION }}
+
+      - name: 🍎 Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: 💎 Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+          bundler-cache: true
+          working-directory: ios
+
+      - name: 🔑 Setup iOS certificates
+        env:
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          FASTLANE_PASSWORD: ${{ secrets.FASTLANE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          cd ios
+          bundle exec fastlane ios dev
+
+      - name: 📱 Upload iOS artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ios-development-build
+          path: builds/ios/dev/FlimmerMobile-dev.ipa
+
+  # Build Android Development
+  build-android-dev:
+    name: 🤖 Build Android (Development)
+    runs-on: ubuntu-latest
+    needs: [test, security]
+    if: github.ref == 'refs/heads/develop'
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+
+      - name: 🤖 Setup Android SDK
+        uses: android-actions/setup-android@v2
+
+      - name: 📦 Install dependencies
+        run: |
+          npm ci
+          npm install -g @expo/cli@${{ env.EXPO_CLI_VERSION }}
+
+      - name: 💎 Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+          bundler-cache: true
+
+      - name: 🔨 Build Android APK
+        run: bundle exec fastlane android dev
+
+      - name: 📱 Upload Android artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: android-development-build
+          path: builds/android/dev/FlimmerMobile-dev.apk
+
+  # E2E Testing
+  e2e-test:
+    name: 🎭 E2E Tests
+    runs-on: macos-latest
+    needs: [build-ios-dev, build-android-dev]
+    if: github.ref == 'refs/heads/develop'
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: |
+          npm ci
+          npm install -g @expo/cli@${{ env.EXPO_CLI_VERSION }}
+
+      - name: 🎭 Run Detox E2E tests
+        run: |
+          npm run e2e:build
+          npm run e2e:test
+
+      - name: 📊 Upload E2E test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: e2e-test-results
+          path: e2e/artifacts/
+
+  # Staging Deployment
+  deploy-staging:
+    name: 🚀 Deploy to Staging
+    runs-on: macos-latest
+    needs: [test, security, e2e-test]
+    if: github.ref == 'refs/heads/main'
+    environment: staging
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: |
+          npm ci
+          npm install -g @expo/cli@${{ env.EXPO_CLI_VERSION }}
+
+      - name: 💎 Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+          bundler-cache: true
+
+      - name: 🍎 Deploy iOS to TestFlight
+        env:
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          FASTLANE_PASSWORD: ${{ secrets.FASTLANE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: bundle exec fastlane ios staging
+
+      - name: 🤖 Deploy Android to Play Console
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ secrets.ANDROID_KEYSTORE_PATH }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: bundle exec fastlane android staging
+
+  # Production Deployment
+  deploy-production:
+    name: 🏭 Deploy to Production
+    runs-on: macos-latest
+    needs: [test, security]
+    if: github.event_name == 'release'
+    environment: production
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: |
+          npm ci
+          npm install -g @expo/cli@${{ env.EXPO_CLI_VERSION }}
+
+      - name: 💎 Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+          bundler-cache: true
+
+      - name: 🍎 Deploy iOS to App Store
+        env:
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          FASTLANE_PASSWORD: ${{ secrets.FASTLANE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          VERSION_NUMBER: ${{ github.event.release.tag_name }}
+          BUILD_NUMBER: ${{ github.run_number }}
+          SUBMIT_FOR_REVIEW: 'true'
+        run: bundle exec fastlane ios production
+
+      - name: 🤖 Deploy Android to Play Store
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ secrets.ANDROID_KEYSTORE_PATH }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          VERSION_NAME: ${{ github.event.release.tag_name }}
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: bundle exec fastlane android production
+
+  # Demo Build for Presentations
+  build-demo:
+    name: 📱 Build Demo Apps
+    runs-on: macos-latest
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[demo]')
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: |
+          npm ci
+          npm install -g @expo/cli@${{ env.EXPO_CLI_VERSION }}
+
+      - name: 💎 Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+          bundler-cache: true
+
+      - name: 📱 Build demo apps
+        run: bundle exec fastlane build_demo
+
+      - name: 📱 Upload iOS demo
+        uses: actions/upload-artifact@v3
+        with:
+          name: ios-demo-build
+          path: builds/ios/dev/FlimmerMobile-dev.ipa
+
+      - name: 🤖 Upload Android demo
+        uses: actions/upload-artifact@v3
+        with:
+          name: android-demo-build
+          path: builds/android/demo/FlimmerMobile-Demo.apk
+
+      - name: 💬 Comment on PR with download links
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { owner, repo, number } = context.issue;
+            const runId = context.runId;
+            
+            const comment = `## 📱 Demo Builds Ready!
+            
+            Your demo builds are ready for testing:
+            
+            - 🍎 **iOS Demo**: [Download IPA](https://github.com/${owner}/${repo}/actions/runs/${runId})
+            - 🤖 **Android Demo**: [Download APK](https://github.com/${owner}/${repo}/actions/runs/${runId})
+            
+            ### Installation Instructions:
+            
+            **iOS:**
+            1. Download the IPA file
+            2. Install via Xcode or TestFlight
+            
+            **Android:**
+            1. Download the APK file
+            2. Enable "Install from Unknown Sources" in Settings
+            3. Install the APK
+            
+            ### Demo Accounts:
+            - **Parent Demo**: Quick access to full dashboard features
+            - **Child Demo**: Age-appropriate interface with safety features
+            `;
+            
+            github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: number,
+              body: comment
+            });
+
+  # Storybook Deployment
+  deploy-storybook:
+    name: 📚 Deploy Storybook
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 📚 Build Storybook
+        run: npm run storybook:build
+
+      - name: 🚀 Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./storybook-static
+
+  # Notification
+  notify:
+    name: 📢 Notify Team
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, deploy-production]
+    if: always()
+    steps:
+      - name: 📢 Slack notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#flimmer-deployments'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }} 

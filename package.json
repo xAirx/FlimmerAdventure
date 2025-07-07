@@ -1,0 +1,31 @@
+{
+  "name": "flimmer-challenge",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --parallel --stream -r dev",
+    "mobile": "pnpm --filter flimmer-mobile start",
+    "storybook": "pnpm --filter @flimmer/shared-ui storybook",
+    "clean:full": "find . -name 'node_modules' -type d -prune -exec rm -rf '{}' + && rm -f pnpm-lock.yaml",
+    "changeset": "pnpm changeset",
+    "version": "pnpm changeset version",
+    "release": "pnpm build && pnpm changeset publish",
+    "test": "pnpm --parallel --stream -r test",
+    "ci": "pnpm --parallel --stream -r ci",
+    "format": "pnpm --parallel --stream -r format",
+    "lint": "pnpm --parallel --stream -r lint"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.1",
+    "pnpm": "^8.15.4",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@heroicons/react": "^2.2.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "18.2.79",
+      "@types/react-dom": "18.2.25"
+    }
+  }
+}

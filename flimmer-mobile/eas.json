@@ -1,0 +1,73 @@
+{
+  "cli": {
+    "version": ">= 5.9.3"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "resourceClass": "m-medium"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "ios": {
+        "resourceClass": "m-medium",
+        "simulator": true
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "ios": {
+        "resourceClass": "m-medium"
+      },
+      "android": {
+        "buildType": "app-bundle"
+      }
+    },
+    "demo": {
+      "extends": "development",
+      "distribution": "internal",
+      "ios": {
+        "simulator": true,
+        "resourceClass": "m-medium"
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_APP_VARIANT": "demo"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "your-apple-id@example.com",
+        "ascAppId": "your-app-store-connect-app-id",
+        "appleTeamId": "YOUR_APPLE_TEAM_ID"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account-key.json",
+        "track": "production"
+      }
+    },
+    "staging": {
+      "ios": {
+        "appleId": "your-apple-id@example.com",
+        "ascAppId": "your-app-store-connect-app-id",
+        "appleTeamId": "YOUR_APPLE_TEAM_ID"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account-key.json",
+        "track": "internal"
+      }
+    }
+  }
+} 

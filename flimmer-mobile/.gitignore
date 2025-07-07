@@ -1,0 +1,56 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+/dist
+/web-build
+
+# Metro
+.metro-cache
+
+# General
+.DS_Store
+node_modules/
+npm-debug.*
+*.pem
+*.sublime-project
+*.sublime-workspace
+.env
+.env.*
+!.env.example
+
+# Android
+/android/app/build
+/android/.gradle
+/android/build
+/android/gradle.properties
+/android/local.properties
+/android/key.properties
+/android/app/src/main/assets/
+
+# iOS
+/ios/Pods
+/ios/build
+/ios/.xcode.env.local
+/ios/fastlane/report.xml
+/ios/fastlane/test_output
+xcuserdata/
+fastlane/report.xml
+
+# Jest
+/coverage
+/reports
+
+# Build artifacts
+*.apk
+*.ipa
+*.aab

@@ -1,0 +1,307 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+
+default_platform(:ios)
+
+# Global variables
+APP_NAME = "Flimmer"
+BUNDLE_ID = "com.flimmer.app"
+TEAM_ID = ENV["APPLE_TEAM_ID"]
+KEYCHAIN_NAME = "fastlane_tmp_keychain"
+
+platform :ios do
+  desc "Build iOS app for development"
+  lane :dev do
+    setup_ci if ENV['CI']
+    
+    # Match certificates and provisioning profiles
+    sync_code_signing(
+      type: "development",
+      app_identifier: BUNDLE_ID,
+      team_id: TEAM_ID,
+      readonly: ENV['CI']
+    )
+    
+    # Build the app
+    build_app(
+      scheme: "FlimmerMobile",
+      configuration: "Debug",
+      export_method: "development",
+      output_directory: "./builds/ios/dev",
+      output_name: "FlimmerMobile-dev.ipa"
+    )
+    
+    # Upload to TestFlight for internal testing
+    if ENV['CI']
+      upload_to_testflight(
+        skip_waiting_for_build_processing: true,
+        distribute_external: false
+      )
+    end
+  end
+
+  desc "Build iOS app for staging"
+  lane :staging do
+    setup_ci if ENV['CI']
+    
+    # Increment build number
+    increment_build_number(
+      build_number: ENV['BUILD_NUMBER'] || number_of_commits
+    )
+    
+    # Match certificates and provisioning profiles
+    sync_code_signing(
+      type: "appstore",
+      app_identifier: BUNDLE_ID,
+      team_id: TEAM_ID,
+      readonly: ENV['CI']
+    )
+    
+    # Build the app
+    build_app(
+      scheme: "FlimmerMobile",
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: "./builds/ios/staging",
+      output_name: "FlimmerMobile-staging.ipa"
+    )
+    
+    # Upload to TestFlight
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      distribute_external: true,
+      groups: ["External Testers"]
+    )
+  end
+
+  desc "Deploy iOS app to App Store"
+  lane :production do
+    setup_ci if ENV['CI']
+    
+    # Increment version number
+    increment_version_number(
+      version_number: ENV['VERSION_NUMBER']
+    ) if ENV['VERSION_NUMBER']
+    
+    # Increment build number
+    increment_build_number(
+      build_number: ENV['BUILD_NUMBER'] || number_of_commits
+    )
+    
+    # Match certificates and provisioning profiles
+    sync_code_signing(
+      type: "appstore",
+      app_identifier: BUNDLE_ID,
+      team_id: TEAM_ID,
+      readonly: ENV['CI']
+    )
+    
+    # Build the app
+    build_app(
+      scheme: "FlimmerMobile",
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: "./builds/ios/production",
+      output_name: "FlimmerMobile-production.ipa"
+    )
+    
+    # Upload to App Store Connect
+    upload_to_app_store(
+      force: true,
+      reject_if_possible: true,
+      skip_metadata: false,
+      skip_screenshots: false,
+      submit_for_review: ENV['SUBMIT_FOR_REVIEW'] == 'true'
+    )
+  end
+
+  desc "Run tests"
+  lane :test do
+    run_tests(
+      scheme: "FlimmerMobile",
+      device: "iPhone 14",
+      clean: true
+    )
+  end
+
+  desc "Setup CI environment"
+  private_lane :setup_ci do
+    create_keychain(
+      name: KEYCHAIN_NAME,
+      password: ENV["KEYCHAIN_PASSWORD"],
+      default_keychain: true,
+      unlock: true,
+      timeout: 3600,
+      lock_when_sleeps: false
+    )
+  end
+end
+
+platform :android do
+  desc "Build Android app for development"
+  lane :dev do
+    # Build debug APK
+    gradle(
+      task: "assembleDebug",
+      project_dir: "android/"
+    )
+    
+    # Copy APK to builds directory
+    sh("mkdir -p ../builds/android/dev")
+    sh("cp ../android/app/build/outputs/apk/debug/app-debug.apk ../builds/android/dev/FlimmerMobile-dev.apk")
+  end
+
+  desc "Build Android app for staging"
+  lane :staging do
+    # Increment version code
+    increment_version_code(
+      gradle_file_path: "android/app/build.gradle",
+      version_code: ENV['BUILD_NUMBER'] || number_of_commits
+    )
+    
+    # Build release APK
+    gradle(
+      task: "assembleRelease",
+      project_dir: "android/"
+    )
+    
+    # Sign APK
+    sign_apk(
+      apk_path: "android/app/build/outputs/apk/release/app-release-unsigned.apk",
+      signed_apk_path: "builds/android/staging/FlimmerMobile-staging.apk",
+      keystore_path: ENV["ANDROID_KEYSTORE_PATH"],
+      alias: ENV["ANDROID_KEY_ALIAS"],
+      keystore_password: ENV["ANDROID_KEYSTORE_PASSWORD"],
+      key_password: ENV["ANDROID_KEY_PASSWORD"]
+    )
+    
+    # Upload to Google Play Console (Internal Testing)
+    upload_to_play_store(
+      track: 'internal',
+      apk: 'builds/android/staging/FlimmerMobile-staging.apk',
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+
+  desc "Deploy Android app to Google Play Store"
+  lane :production do
+    # Increment version name
+    increment_version_name(
+      gradle_file_path: "android/app/build.gradle",
+      version_name: ENV['VERSION_NAME']
+    ) if ENV['VERSION_NAME']
+    
+    # Increment version code
+    increment_version_code(
+      gradle_file_path: "android/app/build.gradle",
+      version_code: ENV['BUILD_NUMBER'] || number_of_commits
+    )
+    
+    # Build release APK
+    gradle(
+      task: "bundleRelease",
+      project_dir: "android/"
+    )
+    
+    # Upload to Google Play Store
+    upload_to_play_store(
+      track: 'production',
+      aab: 'android/app/build/outputs/bundle/release/app-release.aab',
+      skip_upload_metadata: false,
+      skip_upload_images: false,
+      skip_upload_screenshots: false
+    )
+  end
+
+  desc "Run Android tests"
+  lane :test do
+    gradle(
+      task: "test",
+      project_dir: "android/"
+    )
+  end
+
+  desc "Build development APK for demo"
+  lane :demo do
+    gradle(
+      task: "assembleDebug",
+      project_dir: "android/"
+    )
+    
+    # Copy and rename for easy distribution
+    sh("mkdir -p ../builds/android/demo")
+    sh("cp ../android/app/build/outputs/apk/debug/app-debug.apk ../builds/android/demo/FlimmerMobile-Demo.apk")
+    
+    UI.success("Demo APK built successfully!")
+    UI.message("Location: builds/android/demo/FlimmerMobile-Demo.apk")
+  end
+end
+
+# Cross-platform lanes
+desc "Run all tests (iOS and Android)"
+lane :test_all do
+  ios_test
+  android_test
+end
+
+desc "Build development versions for both platforms"
+lane :build_dev do
+  ios_dev
+  android_dev
+  
+  UI.success("Development builds completed!")
+  UI.message("iOS: builds/ios/dev/FlimmerMobile-dev.ipa")
+  UI.message("Android: builds/android/dev/FlimmerMobile-dev.apk")
+end
+
+desc "Build demo versions for presentation"
+lane :build_demo do
+  # Build iOS development version
+  ios_dev
+  
+  # Build Android demo version
+  android_demo
+  
+  UI.success("Demo builds completed!")
+  UI.message("📱 iOS Demo: builds/ios/dev/FlimmerMobile-dev.ipa")
+  UI.message("🤖 Android Demo: builds/android/demo/FlimmerMobile-Demo.apk")
+  UI.message("")
+  UI.message("Installation Instructions:")
+  UI.message("iOS: Install via Xcode or TestFlight")
+  UI.message("Android: Enable 'Install from Unknown Sources' and install APK")
+end
+
+desc "Deploy to staging environments"
+lane :deploy_staging do
+  ios_staging
+  android_staging
+  
+  UI.success("Staging deployment completed!")
+end
+
+desc "Deploy to production"
+lane :deploy_production do
+  ios_production
+  android_production
+  
+  UI.success("Production deployment completed!")
+end
+
+# Error handling
+error do |lane, exception|
+  UI.error("Lane #{lane} failed with exception: #{exception}")
+  
+  # Clean up keychain on CI
+  if ENV['CI']
+    delete_keychain(name: KEYCHAIN_NAME) if File.exist? File.expand_path("~/Library/Keychains/#{KEYCHAIN_NAME}-db")
+  end
+end 

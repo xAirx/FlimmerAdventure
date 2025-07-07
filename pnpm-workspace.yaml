@@ -1,0 +1,6 @@
+packages:
+  - 'nextjs-poc'
+  - 'flimmer-mobile'
+  - 'packages/shared-types'
+  - 'packages/e2e-helpers'
+  - "mvp-strategic-expansion" 

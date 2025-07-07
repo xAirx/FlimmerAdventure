@@ -1,0 +1,85 @@
+{
+  "expo": {
+    "name": "Flimmer",
+    "slug": "flimmer-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FF6B35"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.flimmer.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app needs access to camera to record videos for sharing.",
+        "NSMicrophoneUsageDescription": "This app needs access to microphone to record audio for videos.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to photo library to select videos for sharing.",
+        "NSLocationWhenInUseUsageDescription": "This app needs location access for safety features and parental controls."
+      },
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "associatedDomains": [
+        "applinks:flimmer.app"
+      ]
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FF6B35"
+      },
+      "package": "com.flimmer.app",
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.WAKE_LOCK"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "flimmer.app"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+    ],
+    "scheme": "flimmer",
+    "owner": "flimmer-team",
+    "privacy": "public",
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "githubUrl": "https://github.com/flimmer-team/flimmer-mobile"
+  }
+}
