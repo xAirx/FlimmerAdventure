@@ -57,10 +57,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     setLoading(true);
     try {
+      // Only clear user data, keep privacy consent so user goes to auth screen not privacy policy
       await AsyncStorage.removeItem('user');
       setUser(null);
     } catch (e) {
-      console.error("Failed to remove user from storage", e);
+      console.error("Failed to remove user data from storage", e);
     } finally {
       setLoading(false);
     }

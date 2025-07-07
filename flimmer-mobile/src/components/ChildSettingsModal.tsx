@@ -10,7 +10,6 @@ interface Child {
 export interface ChildSettings {
   contentFilterLevel: 'young_child' | 'pre_teen' | 'teen';
   screenTimeLimitHours: number;
-  locationTrackingEnabled: boolean;
 }
 
 interface ChildSettingsModalProps {
@@ -73,14 +72,7 @@ const ChildSettingsModal: React.FC<ChildSettingsModalProps> = ({ visible, onClos
             </TouchableOpacity>
           </View>
 
-          {/* Location Tracking */}
-          <View style={styles.row}>
-            <Text style={styles.rowTitle}>Location Tracking</Text>
-            <Switch
-              value={settings.locationTrackingEnabled}
-              onValueChange={(value) => setSettings(s => ({ ...s, locationTrackingEnabled: value }))}
-            />
-          </View>
+
 
           {/* Actions */}
           <View style={styles.buttonContainer}>

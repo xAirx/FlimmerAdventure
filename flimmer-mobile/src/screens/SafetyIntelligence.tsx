@@ -169,7 +169,10 @@ export default function SafetyIntelligence() {
               <Text style={styles.insightType}>{insight.type.toUpperCase()}</Text>
             </View>
             <View style={styles.insightMeta}>
-              <Text style={styles.confidenceText}>{insight.confidence}%</Text>
+              <View style={styles.confidenceContainer}>
+                <Text style={styles.aiIcon}>🧠</Text>
+                <Text style={styles.confidenceText}>{insight.confidence}%</Text>
+              </View>
               {insight.actionRequired && (
                 <View style={styles.actionBadge}>
                   <Text style={styles.actionBadgeText}>ACTION</Text>
@@ -394,10 +397,18 @@ const styles = StyleSheet.create({
   insightMeta: {
     alignItems: 'flex-end',
   },
+  confidenceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  aiIcon: {
+    fontSize: 12,
+    marginRight: 4,
+  },
   confidenceText: {
     fontSize: 12,
     color: '#666',
-    marginBottom: 4,
   },
   actionBadge: {
     backgroundColor: '#FF6B35',

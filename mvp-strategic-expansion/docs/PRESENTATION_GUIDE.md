@@ -195,7 +195,7 @@ cd ../flimmer-mobile && npm install
 ### Technical Differentiators (1 minute)
 
 **Competitive Advantages**:
-- **Proactive AI**: Prevents 94% of safety incidents before they happen
+- **Proactive AI**: Assists parents in preventing safety incidents before they impact your family
 - **Real-Time Sync**: Instant updates across all platforms
 - **Privacy-First**: GDPR compliance as competitive moat
 - **Cross-Platform**: Single codebase, multiple deployment targets

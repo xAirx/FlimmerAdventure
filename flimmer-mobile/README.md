@@ -29,7 +29,7 @@
 | Traditional Family Apps | **Flimmer Ecosystem** |
 |------------------------|---------------------------|
 | React to problems after they happen | **Predict and prevent** issues proactively |
-| Basic content blocking | **AI-powered behavioral analysis** |
+| Basic content blocking | **AI-assisted behavioral insights** |
 | Single platform solutions | **Cross-platform real-time sync** |
 | Privacy as afterthought | **GDPR-first design** with zero-access content gating |
 | One-size-fits-all controls | **Age-appropriate interfaces** for each family member |
@@ -195,7 +195,7 @@
 
 ### **Safety Track Record: "We've protected families with zero incidents"**
 - **Zero Data Breaches**: Industry-leading security with perfect track record
-- **Proactive Protection**: AI prevents 94% of safety incidents before they happen
+- **Proactive Protection**: AI assists parents in preventing safety incidents before they impact your family
 - **24/7 Monitoring**: Continuous security monitoring and threat detection
 - **Expert Security**: Built by privacy and security engineers from day one
 - **Regular Audits**: Independent security assessments and penetration testing

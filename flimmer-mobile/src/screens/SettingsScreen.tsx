@@ -33,14 +33,6 @@ interface Child {
 const MOCK_SETTINGS: SettingItem[] = [
   // Core Safety & Privacy
   {
-    id: 'profile-visibility',
-    title: 'Profile Visibility',
-    description: 'Allow child\'s profile to be discovered by other verified families',
-    type: 'toggle',
-    value: false,
-    icon: '👁️',
-  },
-  {
     id: 'direct-messaging',
     title: 'Direct Messaging',
     description: 'Allow child to send/receive private messages from other children',
@@ -65,66 +57,32 @@ const MOCK_SETTINGS: SettingItem[] = [
     icon: '⬇️',
   },
   
-  // Data & Analytics
-  {
-    id: 'analytics-tracking',
-    title: 'Usage Analytics',
-    description: 'Share anonymized usage data to improve safety features',
-    type: 'toggle',
-    value: true,
-    icon: '📊',
-  },
-  {
-    id: 'ai-recommendations',
-    title: 'AI Content Recommendations',
-    description: 'Use viewing history to suggest age-appropriate content',
-    type: 'toggle',
-    value: true,
-    icon: '🤖',
-  },
-  
   // Communication & Notifications
   {
     id: 'parent-notifications',
-    title: 'Parent Notifications',
-    description: 'Send alerts to parents for all significant activities',
+    title: 'Content Approval Notifications',
+    description: 'Get notified when content needs approval before publishing',
     type: 'toggle',
     value: true,
     icon: '🔔',
   },
   {
-    id: 'safety-interventions',
-    title: 'Automatic Safety Interventions',
-    description: 'Auto-pause suspicious activities until parent review',
+    id: 'content-moderation',
+    title: 'Content Pre-Approval Required',
+    description: 'All content must be approved by parents before publishing',
     type: 'toggle',
     value: true,
     icon: '🛡️',
-  },
-  {
-    id: 'screen-time-tracking',
-    title: 'Screen Time Monitoring',
-    description: 'Track and limit daily usage with detailed reports',
-    type: 'toggle',
-    value: true,
-    icon: '⏰',
   },
   
   // Social Features
   {
     id: 'friend-requests',
     title: 'Friend Requests',
-    description: 'Allow child to send/accept friend requests',
+    description: 'Allow child to send/accept friend requests from verified families',
     type: 'toggle',
     value: false,
     icon: '👋',
-  },
-  {
-    id: 'live-streaming',
-    title: 'Live Video Streaming',
-    description: 'Allow child to broadcast live video content',
-    type: 'toggle',
-    value: false,
-    icon: '📺',
   },
   {
     id: 'collaboration-features',
@@ -134,24 +92,6 @@ const MOCK_SETTINGS: SettingItem[] = [
     value: false,
     icon: '🤝',
   },
-  
-  // Advanced Privacy
-  {
-    id: 'data-retention',
-    title: 'Extended Data Retention',
-    description: 'Keep activity logs longer than minimum required (30 days vs 90 days)',
-    type: 'toggle',
-    value: false,
-    icon: '🗄️',
-  },
-  {
-    id: 'third-party-sharing',
-    title: 'Educational Partner Sharing',
-    description: 'Share anonymized content with verified educational organizations',
-    type: 'toggle',
-    value: false,
-    icon: '🎓',
-  },
 ];
 
 const MOCK_CHILDREN: Child[] = [
@@ -160,8 +100,8 @@ const MOCK_CHILDREN: Child[] = [
 ];
 
 const initialSettings: Record<string, ChildSettings> = {
-  child1: { contentFilterLevel: 'pre_teen', screenTimeLimitHours: 2, locationTrackingEnabled: true },
-  child2: { contentFilterLevel: 'young_child', screenTimeLimitHours: 1, locationTrackingEnabled: false },
+  child1: { contentFilterLevel: 'pre_teen', screenTimeLimitHours: 2 },
+  child2: { contentFilterLevel: 'young_child', screenTimeLimitHours: 1 },
 };
 
 const PRIVACY_CONSENT_KEY = '@privacy_consent';
@@ -437,12 +377,6 @@ export default function SettingsScreen() {
             <Switch
               value={consent?.activityAnalysis}
               onValueChange={(value) => handleConsentChange('activityAnalysis', value)}
-            />
-          </SettingsRow>
-          <SettingsRow title="Location Tracking" description="For location-based safety features">
-            <Switch
-              value={consent?.locationTracking}
-              onValueChange={(value) => handleConsentChange('locationTracking', value)}
             />
           </SettingsRow>
           <SettingsRow title="Essential Data Processing" description="Required for core app functionality">

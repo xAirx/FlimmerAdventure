@@ -5,7 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, Text } from 'react-native';
 
 // Import Context
 import { AuthProvider, useAuth } from './src/context/AuthContext';
@@ -18,7 +18,6 @@ import PrivacyPolicyModal, { Consent } from './src/components/PrivacyPolicyModal
 import AuthScreen from './src/screens/AuthScreen';
 import ParentDashboard from './src/screens/ParentDashboard';
 import ChildInterface from './src/screens/ChildInterface';
-import LiveActivityScreen from './src/screens/LiveActivityScreen';
 import SafetyIntelligence from './src/screens/SafetyIntelligence';
 import SettingsScreen from './src/screens/SettingsScreen';
 
@@ -28,11 +27,46 @@ const Tab = createBottomTabNavigator();
 const PRIVACY_CONSENT_KEY = '@privacy_consent';
 
 const ParentTabs = () => (
-  <Tab.Navigator screenOptions={{ headerShown: false }}>
-    <Tab.Screen name="Dashboard" component={ParentDashboard} />
-    <Tab.Screen name="Live Activity" component={LiveActivityScreen} />
-    <Tab.Screen name="Safety AI" component={SafetyIntelligence} />
-    <Tab.Screen name="Settings" component={SettingsScreen} />
+  <Tab.Navigator 
+    screenOptions={{ 
+      headerShown: false,
+      tabBarStyle: {
+        backgroundColor: '#ffffff',
+        borderTopWidth: 1,
+        borderTopColor: '#e0e0e0',
+        height: 60,
+        paddingBottom: 8,
+        paddingTop: 8,
+      },
+      tabBarActiveTintColor: '#FF6B35',
+      tabBarInactiveTintColor: '#666666',
+      tabBarLabelStyle: {
+        fontSize: 12,
+        fontWeight: '500',
+      },
+    }}
+  >
+    <Tab.Screen 
+      name="Dashboard" 
+      component={ParentDashboard}
+      options={{
+        tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>📊</Text>,
+      }}
+    />
+    <Tab.Screen 
+      name="Safety AI" 
+      component={SafetyIntelligence}
+      options={{
+        tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🤖</Text>,
+      }}
+    />
+    <Tab.Screen 
+      name="Settings" 
+      component={SettingsScreen}
+      options={{
+        tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>⚙️</Text>,
+      }}
+    />
   </Tab.Navigator>
 );
 
@@ -71,6 +105,8 @@ export default function App() {
   const handleAcceptConsent = async (newConsent: Consent) => {
     try {
       await AsyncStorage.setItem(PRIVACY_CONSENT_KEY, JSON.stringify(newConsent));
+      // Clear any old user data to force auth screen
+      await AsyncStorage.removeItem('user');
       setConsent(newConsent);
     } catch (e) {
       // Handle error

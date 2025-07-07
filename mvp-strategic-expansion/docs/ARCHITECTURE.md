@@ -515,10 +515,18 @@ User Upload --> Firebase Storage --> AI Scan (Async) --> Moderation Queue --> Pa
 
 ## Diagram
 
-```mermaid
-graph TD;
-    MobileApp["Mobile App"] --> APIGateway["API Gateway"] --> CloudFuncs["Firebase Cloud Funcs"];
-    CloudFuncs --> FirebaseDB["Firebase DB"];
-    FirebaseDB --> FirebaseStorage["Firebase Storage"];
-    FirebaseStorage --> AIScan["AI Content Scan"];
-``` 
++-----------+      +------------+      +---------------------+
+| Mobile    | ---> | API        | ---> | Firebase Cloud Funcs|
+| App       |      | Gateway    |      +---------------------+
++-----------+      +------------+                |
+                                              +-----------------+
+                                              | Firebase DB     |
+                                              +-----------------+
+                                                      |
+                                              +-----------------+
+                                              | Firebase Storage|
+                                              +-----------------+
+                                                      |
+                                              +-----------------+
+                                              | AI Content Scan |
+                                              +-----------------+

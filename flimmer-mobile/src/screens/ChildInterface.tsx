@@ -93,8 +93,10 @@ export default function ChildInterface() {
   const { user, logout } = useAuth();
   const [videos, setVideos] = useState<Video[]>(MOCK_VIDEOS);
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
+
   const [userPoints, setUserPoints] = useState(800); // Match the UI showing 800 points
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [selectedCategory, setSelectedCategory] = useState('For You');
 
   const handleEarnPoints = (action: string, points: number) => {
     setUserPoints(prev => prev + points);
@@ -154,53 +156,42 @@ export default function ChildInterface() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Top Header Bar */}
-      <View style={styles.topBar}>
-        <View style={styles.statusInfo}>
-          <Text style={styles.time}>21.32</Text>
-          <View style={styles.signal}>
-            <Text style={styles.signalText}>••• 5G</Text>
-            <View style={styles.battery}>
-              <Text style={styles.batteryNumber}>16</Text>
-            </View>
-          </View>
-        </View>
+      {/* Top Header with Logout */}
+      <View style={styles.topHeader}>
+        <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+          <Text style={styles.logoutText}>← Back</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Flimmer</Text>
+        <Text style={styles.points}>💎 {userPoints}</Text>
       </View>
 
-      {/* Orange Progress Bar */}
-      <View style={styles.progressBar} />
+      {/* Category Tabs */}
+      <View style={styles.categoryTabs}>
+        {['For You', 'Following', 'Live', 'Gaming'].map((category) => (
+          <TouchableOpacity
+            key={category}
+            style={[styles.categoryTab, selectedCategory === category && styles.activeCategoryTab]}
+            onPress={() => setSelectedCategory(category)}
+          >
+            <Text style={[styles.categoryText, selectedCategory === category && styles.activeCategoryText]}>
+              {category}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
-      {/* Video Feed */}
+      {/* Clean Video Feed */}
       <ScrollView 
         style={styles.feedContainer}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.feedContent}
+        pagingEnabled={true}
       >
         {videos.map((video, index) => (
           <VideoCard key={video.id} item={video} index={index} />
         ))}
       </ScrollView>
 
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navIcon}>🏠</Text>
-          <Text style={styles.navText}>Hjem</Text>
-        </TouchableOpacity>
-        
-        <View style={styles.navCenter}>
-          <View style={styles.centerButton}>
-            <Text style={styles.centerIcon}>⭐</Text>
-          </View>
-        </View>
-        
-        <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navIcon}>🔍</Text>
-          <Text style={styles.navText}>Søg</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Enhanced Game Modal */}
+      {/* Enhanced Video Detail Modal */}
       {selectedVideo && (
         <Modal
           visible={!!selectedVideo}
@@ -233,6 +224,10 @@ export default function ChildInterface() {
               <View style={styles.modalVideoInfo}>
                 <Text style={styles.modalVideoTitle}>{selectedVideo.title}</Text>
                 <Text style={styles.modalCreator}>af {selectedVideo.creator}</Text>
+                <View style={styles.videoStats}>
+                  <Text style={styles.videoStat}>👍 {selectedVideo.likes || 0}</Text>
+                  <Text style={styles.videoStat}>💬 {selectedVideo.comments || 0}</Text>
+                </View>
               </View>
 
               {/* Game Actions */}
@@ -319,6 +314,7 @@ export default function ChildInterface() {
           </SafeAreaView>
         </Modal>
       )}
+
     </SafeAreaView>
   );
 }
@@ -326,7 +322,56 @@ export default function ChildInterface() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: '#000',
+  },
+  topHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    backgroundColor: '#000',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  points: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  logoutButton: {
+    padding: 8,
+  },
+  logoutText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  categoryTabs: {
+    flexDirection: 'row',
+    backgroundColor: '#000',
+    paddingHorizontal: 20,
+    paddingBottom: 10,
+  },
+  categoryTab: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginRight: 16,
+  },
+  activeCategoryTab: {
+    borderBottomWidth: 2,
+    borderBottomColor: '#fff',
+  },
+  categoryText: {
+    color: '#999',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  activeCategoryText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
   topBar: {
     flexDirection: 'row',
@@ -376,13 +421,10 @@ const styles = StyleSheet.create({
   feedContainer: {
     flex: 1,
   },
-  feedContent: {
-    padding: theme.spacing.md,
-  },
   videoCard: {
     width: width,
-    height: height - 100,
-    marginBottom: theme.spacing.md,
+    height: height - 160,
+    marginBottom: 0,
   },
   videoTouchable: {
     flex: 1,
@@ -500,7 +542,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: '#fff',
   },
   modalScrollView: {
     flex: 1,
@@ -519,130 +561,140 @@ const styles = StyleSheet.create({
     left: '50%',
     transform: [{ translateX: -50 }, { translateY: -25 }],
     backgroundColor: 'rgba(0,0,0,0.7)',
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
   },
   modalPlayButtonText: {
-    color: theme.colors.white,
-    fontSize: theme.fontSizes.lg,
+    color: '#fff',
+    fontSize: 16,
     fontWeight: 'bold',
   },
   pointsHeader: {
-    backgroundColor: theme.colors.primary,
-    padding: theme.spacing.md,
+    backgroundColor: '#007AFF',
+    padding: 16,
     alignItems: 'center',
   },
   pointsHeaderText: {
-    color: theme.colors.white,
-    fontSize: theme.fontSizes.lg,
+    color: '#fff',
+    fontSize: 18,
     fontWeight: 'bold',
   },
   modalVideoInfo: {
-    padding: theme.spacing.md,
-    backgroundColor: theme.colors.card,
+    padding: 20,
+    backgroundColor: '#f8f9fa',
   },
   modalVideoTitle: {
-    fontSize: theme.fontSizes.xl,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: theme.colors.text,
-    marginBottom: theme.spacing.sm,
+    color: '#333',
+    marginBottom: 8,
   },
   modalCreator: {
-    fontSize: theme.fontSizes.md,
-    color: theme.colors.textSecondary,
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 12,
+  },
+  videoStats: {
+    flexDirection: 'row',
+    gap: 20,
+  },
+  videoStat: {
+    fontSize: 16,
+    color: '#666',
   },
   gameSection: {
-    padding: theme.spacing.md,
+    padding: 20,
   },
   gameSectionTitle: {
-    fontSize: theme.fontSizes.xl,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: theme.colors.text,
+    color: '#333',
     textAlign: 'center',
-    marginBottom: theme.spacing.sm,
+    marginBottom: 8,
   },
   gameSectionSubtitle: {
-    fontSize: theme.fontSizes.md,
-    color: theme.colors.textSecondary,
+    fontSize: 14,
+    color: '#666',
     textAlign: 'center',
-    marginBottom: theme.spacing.lg,
+    marginBottom: 20,
   },
   safetyActions: {
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing.lg,
+    gap: 12,
+    marginBottom: 20,
   },
   safetyAction: {
-    backgroundColor: theme.colors.card,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.md,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
     alignItems: 'center',
-    shadowColor: theme.colors.black,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
   actionActionIcon: {
-    fontSize: 40,
-    marginBottom: theme.spacing.sm,
+    fontSize: 32,
+    marginBottom: 8,
   },
   actionTitle: {
-    fontSize: theme.fontSizes.lg,
+    fontSize: 16,
     fontWeight: 'bold',
-    color: theme.colors.text,
-    marginBottom: theme.spacing.sm,
+    color: '#333',
+    marginBottom: 4,
   },
   actionDescription: {
-    fontSize: theme.fontSizes.sm,
-    color: theme.colors.textSecondary,
+    fontSize: 14,
+    color: '#666',
     textAlign: 'center',
-    marginBottom: theme.spacing.sm,
+    marginBottom: 8,
   },
   actionPoints: {
-    fontSize: theme.fontSizes.md,
+    fontSize: 14,
     fontWeight: 'bold',
-    color: theme.colors.primary,
+    color: '#007AFF',
   },
   rewardsSection: {
-    backgroundColor: theme.colors.card,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.lg,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
   },
   rewardsTitle: {
-    fontSize: theme.fontSizes.lg,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: theme.colors.text,
+    color: '#333',
     textAlign: 'center',
-    marginBottom: theme.spacing.md,
+    marginBottom: 12,
   },
   rewardsList: {
-    gap: theme.spacing.sm,
+    gap: 8,
   },
   rewardItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: theme.spacing.sm,
+    paddingVertical: 4,
   },
   rewardIcon: {
-    fontSize: 24,
-    marginRight: theme.spacing.md,
+    fontSize: 20,
+    marginRight: 12,
   },
   rewardText: {
-    fontSize: theme.fontSizes.md,
-    color: theme.colors.text,
+    fontSize: 14,
+    color: '#333',
   },
   closeButton: {
-    backgroundColor: theme.colors.textSecondary,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.md,
-    margin: theme.spacing.md,
+    backgroundColor: '#666',
+    borderRadius: 8,
+    padding: 16,
+    margin: 20,
     alignItems: 'center',
   },
   closeButtonText: {
-    color: theme.colors.white,
-    fontSize: theme.fontSizes.md,
+    color: '#fff',
+    fontSize: 16,
     fontWeight: '600',
   },
+
 }); 

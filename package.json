@@ -28,7 +28,14 @@
   "pnpm": {
     "overrides": {
       "@types/react": "18.2.79",
-      "@types/react-dom": "18.2.25"
+      "@types/react-dom": "18.2.25",
+      "metro": "0.82.5",
+      "metro-config": "0.82.5",
+      "metro-core": "0.82.5",
+      "metro-resolver": "0.82.5",
+      "metro-transform-plugins": "0.82.5",
+      "metro-transform-worker": "0.82.5",
+      "@expo/metro-config": "0.21.0-canary-20250701-6a945c5"
     }
   },
   "lint-staged": {

@@ -4,6 +4,9 @@ module.exports = {
     '@testing-library/jest-native/extend-expect',
     '<rootDir>/src/test-setup.ts'
   ],
+  transformIgnorePatterns: [
+    'node_modules/(?!(jest-)?@?react-native|@react-native-community|@react-navigation|@react-native/js-polyfills)'
+  ],
   testMatch: [
     '**/__tests__/**/*.(ts|tsx|js)',
     '**/*.(test|spec).(ts|tsx|js)'
